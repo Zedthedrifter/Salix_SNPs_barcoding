@@ -187,8 +187,8 @@ vcftools --vcf $INDIR/${NAME}.flt1.vcf \
          --hwe 0.05
 
 #make a compressed and indexed version for bcftools view -r (region) later
-bgzip $OUTDIR/${NAME}.flt2.recode.vcf $OUTDIR/${NAME}.flt2.vcf.gz
-tabix -p vcf $OUTDIR/${NAME}.flt2.vcf.gz
+bgzip $OUTDIR/${NAME}.flt2.recode.vcf
+tabix -p vcf $OUTDIR/${NAME}.flt2.recode.vcf.gz
 #-min-meanDP 5 : at least 5 reads per sample, otherwise not well supported
 #--max-meanDP: if coverage > 30 (normalized to 15), the site is likely to be paralog (or i should drop to 25? filtering is rather quick)
 #I removed --mac 5, which requires allele count to be >=5. Allele count is simply the number of times that allele appears over all individuals at that site. this varies for sample size etc. 
@@ -412,7 +412,7 @@ display_run_time $SECONDS species_specific_SNPs
 #./species_specific_allele.py extract_ssSNP_regions -n $RESULT2/REP_hq_specific_allele_GT_freq.csv -o $RESULT2/REP_
 
 #STEP_4: convert VCF to fasta: SINGLE
-./species_specific_allele.py vcf_to_fasta --csv $RESULT2/CAP_high_resolution_windows.csv -n $NAME -v $RESULT2/CAP.flt2.vcf.gz -o $RESULT3/CAP
+#./species_specific_allele.py vcf_to_fasta --csv $RESULT2/CAP_high_resolution_windows.csv -n $NAME -v $RESULT2/CAP.flt2.vcf.gz -o $RESULT3/CAP
 #./species_specific_allele.py vcf_to_fasta --csv $RESULT2/REP_high_resolution_windows.csv -n $NAME -v $RESULT2/REP.flt2.vcf.gz -o $RESULT3/REP
 
 #STEP_5: IQTREE PER GENE:gene array: env=easy353 MEM=1G
@@ -431,8 +431,8 @@ run_astral $INDIR $OUTDIR 1 #get at least 2 genes for each mono taxa
 run_astral $INDIR $OUTDIR 2 #get at least 2 genes for each mono taxa
 }
 
-#RUN_ASTRAL $RESULT4/CAP $RESULT5/CAP
-#RUN_ASTRAL $RESULT4/REP $RESULT5/REP
+RUN_ASTRAL $RESULT4/CAP $RESULT5/CAP
+RUN_ASTRAL $RESULT4/REP $RESULT5/REP
 
 
 

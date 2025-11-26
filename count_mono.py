@@ -27,13 +27,25 @@ def is_monophyletic(tree, prefix):
   target_tips = [tip.name for tip in tree.get_terminals() if tip.name.startswith(prefix)]
   if not target_tips:
     return False
-    # Find the MRCA of these tips
+  # Root the tree with an outgroup (first non-target tip)
+  all_tips = [tip.name for tip in tree.get_terminals()]
+  outgroup = [tip for tip in all_tips if not tip.startswith(prefix)][0] if any(not tip.startswith(prefix) for tip in all_tips) else None
+    
+  if outgroup:
+    try:
+      tree.root_with_outgroup(outgroup)
+    except:
+      pass  # If rooting fails, continue with unrooted tree
+  # Find the MRCA of these tips
   try:
     mrca = tree.common_ancestor(target_tips)
   except:
     # This can happen if some tips are not found (shouldn't happen with our filtering)
     return False
   clade_tips = [tip.name for tip in mrca.get_terminals()]
+  #DEBUGGING
+  #if prefix=='S.arbuscula':
+  #  print(target_tips,clade_tips)
   return all(tip.startswith(prefix) for tip in clade_tips) #check if all members start with the same prefix (if yes, monophyletic)
 
 #check each tree
