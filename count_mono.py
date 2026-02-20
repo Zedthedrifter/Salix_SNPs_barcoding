@@ -58,13 +58,14 @@ def process_tree(treefile,mono_dict):
   gene=treefile.split('/')[-1].replace('.fasta.treefile','')
   tip_names = [tip.name for tip in tree.get_terminals() if tip.name]
   #pres=set([''.join([i for i in name if i not in ['0','1','2','3','4','5','6','7','8','9']]) for name in tip_names])
-  pres=[] #a better way to fix the name issues
-  for name in tip_names: 
-    for i in [0,1,2,3,4,5,6,7,8,9]:
-      if str(i) in name:
-        name=name.split(str(i))[0].strip(str(i)).strip('_')
-    pres.append(name)
-  pres=set(pres)
+  pres=set(['_'.join(name.split('_')[:1]) for name in tip_names]) #just follow the genus.species format
+  #pres=[] #a better way to fix the name issues
+  #for name in tip_names: 
+  #  for i in [0,1,2,3,4,5,6,7,8,9]:
+  #    if str(i) in name:
+  #      name=name.split(str(i))[0].strip(str(i)).strip('_')
+  #  pres.append(name)
+  #pres=set(pres)
   for prefix in pres:
     if is_monophyletic(tree, prefix):
       mono_dict[gene][prefix]=1
@@ -79,7 +80,7 @@ def process_treefiles(indir,outdir):
     process_tree(treefile,mono_dict) #add value to key
   df=pd.DataFrame.from_dict(mono_dict, orient='index')
   df=df.fillna(0)
-  df.to_csv(f'{outdir}/gene_resolution.csv', index=True) 
+  df.to_csv(f'{outdir}gene_resolution.csv', index=True) 
   print(df)
 
 #summary the power to resolve monophyletic group from each gene
@@ -119,10 +120,10 @@ def gene_summary(indir,outdir):
     sbp.call(f'iqtree -s {outdir}/gene_{cut}taxa/gene_{cut}taxa.fasta -bb 1000 -redo -safe',shell=True)
   
 #find a set of gene that resolves the most monophyletic groups
-def gene_select(indir,outdir,cvg):
+def gene_select(r,indir,outdir,cvg):
   f=open(f"{outdir}/astral_gene_selection.log",'a')
   f.write(f"the set of genes ensured {cvg} genes that resolve monophyletic group per taxa, when possible\n")
-  df=pd.read_csv(f'{outdir}/gene_resolution.csv',index_col=0)
+  df=pd.read_csv(f'{outdir}/{r}',index_col=0)
   df['total'] = df.sum(axis=1)
   #names=pd.read_csv(f'{outdir}/sample_names.csv',index_col=0)
   #step 1: for each column, find all rows with none-0 entry at this column, sort them by row sum, decending order
@@ -191,10 +192,11 @@ def main():
                                     usage = './count_mono.py gene_summary -i <indir> -o <outdir>')
   fqgz_parser.set_defaults(func=gene_summary)
   #gene_select
-  fqgz_parser=subparsers.add_parser('gene_select', parents=[common_args],help='select a set of genes that results in at least n gene that resolves each taxa monophyletically, when possible, and compile the treefiles', 
-                                    usage = './count_mono.py gene_summary -i <indir> -o <outdir> --cvg <threshold>')
-  fqgz_parser.add_argument('--cvg', help='how many genes', metavar='cvg')
-  fqgz_parser.set_defaults(func=gene_select)
+  gene_select_parser=subparsers.add_parser('gene_select', parents=[common_args],help='select a set of genes that results in at least n gene that resolves each taxa monophyletically, when possible, and compile the treefiles', 
+                                    usage = './count_mono.py gene_summary -r <resolution> -i <indir> -o <outdir> --cvg <threshold>')
+  gene_select_parser.add_argument('-r', help='resolution file', metavar='r')
+  gene_select_parser.add_argument('--cvg', help='how many genes', metavar='cvg')
+  gene_select_parser.set_defaults(func=gene_select)
   #gene_manual
   fqgz_parser=subparsers.add_parser('gene_manual', parents=[common_args],help='select a set of genes manually, and compile the treefiles', 
                                     usage = './count_mono.py gene_manual -i <indir> -o <outdir> --genels <genels>')
@@ -216,6 +218,7 @@ def main():
   # Add function-specific arguments
   if args.command == 'gene_select':
     kwargs['cvg'] = args.cvg
+    kwargs['r'] = args.r
   if args.command == 'gene_manual':
     kwargs['genels'] = args.genels
   

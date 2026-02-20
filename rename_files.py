@@ -120,7 +120,7 @@ def rename_contig(indir, outdir,infile,fcsv):
   df = pd.read_csv(fcsv, encoding="latin-1")
   d={k:v for k,v in zip(df['new index'],df['species'])}
   contigs=SeqIO.to_dict(SeqIO.parse(f"{indir}/{infile}",'fasta'))
-  records=[SeqRecord(v.seq,id=d[k],name='',description='') for k,v in contigs.items()]
+  records=[SeqRecord(v.seq,id=d.get(k,k),name='',description='') for k,v in contigs.items()]
   SeqIO.write(records,f'{outdir}/{infile}','fasta')
 
 def remove_taxa(infile,outfile,taxa):

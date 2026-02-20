@@ -20,14 +20,24 @@ func_list=[
 #FUNCTIONS
 
 #filter out bad taxa and bad seq
-def remove_taxa(fasta,taxa):
+def remove_taxa(fasta,bad_smp):
+  for seq in SeqIO.parse(fasta,'fasta'): #parse can only be used as iterator once. you forgot that
+    #print(seq.id)
+    if seq.id.replace(' ','').replace('.','_') in bad_smp:
+      print(seq.id)
+  #the actual output
   seqs=SeqIO.parse(fasta,'fasta')
-  records=[SeqRecord(seq.seq,id=seq.description.replace(' ','').replace('.','_').split('salix')[0],name=seq.name,description=seq.description) for seq in seqs if taxa not in seq.description and len(set(str(seq.seq))) != 1]
+  records=[SeqRecord(seq.seq,id=seq.id.replace(' ','').replace('.','_'),name='',description='') 
+  for seq in seqs 
+  if seq.id.replace(' ','').replace('.','_') not in bad_smp and len(set(str(seq.seq))) != 1]
   SeqIO.write(records,fasta,'fasta')
+  
 
 ##################################################
-def main(fasta,taxa):
-  remove_taxa(fasta,taxa)
+def main(fasta):  
+  bad_smp=['S_phylicifolia_6'] #'P.gramineus_4','P.lucens_1','P.lucens_2'
+  reformat=[i.replace(' ','').replace('.','_') for i in bad_smp] #just in case the formatting is wrong (i once put P.pusilus_6 and the '.' was not recognized later)
+  remove_taxa(fasta,reformat)
     
 
 ##################################################
